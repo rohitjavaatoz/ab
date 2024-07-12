@@ -52,3 +52,82 @@
         }
     ]
 }
+-----------------------------
+    public class TabAttribute {
+    private String name;
+    private String maintenanceType;
+    private List<String> isEditableBy;
+    private boolean cicImpacted;
+
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getMaintenanceType() {
+        return maintenanceType;
+    }
+
+    public void setMaintenanceType(String maintenanceType) {
+        this.maintenanceType = maintenanceType;
+    }
+
+    public List<String> getIsEditableBy() {
+        return isEditableBy;
+    }
+
+    public void setIsEditableBy(List<String> isEditableBy) {
+        this.isEditableBy = isEditableBy;
+    }
+
+    public boolean isCicImpacted() {
+        return cicImpacted;
+    }
+
+    public void setCicImpacted(boolean cicImpacted) {
+        this.cicImpacted = cicImpacted;
+    }
+}
+-
+    import java.util.List;
+
+public class Tab {
+    private String name;
+    private List<TabAttribute> attributes;
+
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<TabAttribute> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(List<TabAttribute> attributes) {
+        this.attributes = attributes;
+    }
+}
+-
+    import java.util.List;
+
+public class TabsCollection {
+    private List<Tab> tabs;
+
+    // Getter and setter for tabs
+    public List<Tab> getTabs() {
+        return tabs;
+    }
+
+    public void setTabs(List<Tab> tabs) {
+        this.tabs = tabs;
+    }
+}
