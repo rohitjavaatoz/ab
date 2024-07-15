@@ -92,3 +92,5 @@ public class MaintainMetadataService {
         return responsePayloadDTO;
     }
 }
+----------
+        String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
