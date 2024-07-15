@@ -7,3 +7,42 @@ API Endpoint: /item/maintain/metadata
 HTTP Method: GET
 
 While giving the response to UI the attributes need to be filtered based on the Auth role, we are receiving in token against isEditableBy attribute in collection
+
+----------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/item/maintain")
+public class MetadataController {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    @GetMapping("/metadata")
+    public List<MetadataDocument> getAllMetadata() {
+        // Assuming you get the authRole from the token or request context
+        String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
+
+        // Retrieve all metadata documents from MongoDB
+        List<MetadataDocument> allMetadata = metadataRepository.findAll();
+
+        // Filter attributes based on authRole for each document
+        allMetadata.forEach(metadata -> {
+            metadata.getTabs().forEach(tab -> {
+                tab.setAttributes(
+                    tab.getAttributes().stream()
+                        .filter(attribute -> attribute.getIsEditableBy().contains(authRole))
+                        .collect(Collectors.toList())
+                );
+            });
+        });
+
+        return allMetadata;
+    }
+}
+
