@@ -45,4 +45,60 @@ public class MetadataController {
         return allMetadata;
     }
 }
+--------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/item/maintain")
+public class MetadataController {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    @GetMapping("/metadata")
+    public MetadataResponseDTO getAllMetadata() {
+        // Assuming you get the authRole from the token or request context
+        String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
+
+        // Retrieve all metadata documents from MongoDB
+        List<MetadataDocument> allMetadata = metadataRepository.findAll();
+
+        // Create DTOs for response
+        MetadataResponseDTO response = new MetadataResponseDTO();
+
+        // Convert metadata documents to DTOs
+        response.setTabs(
+            allMetadata.stream()
+                .map(metadata -> {
+                    TabDTO tabDTO = new TabDTO();
+                    tabDTO.setName(metadata.getName());
+
+                    // Convert attributes to DTOs
+                    tabDTO.setAttributes(
+                        metadata.getAttributes().stream()
+                            .filter(attribute -> attribute.getIsEditableBy().contains(authRole))
+                            .map(attribute -> {
+                                AttributeDTO attributeDTO = new AttributeDTO();
+                                attributeDTO.setName(attribute.getName());
+                                attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+                                attributeDTO.setIsEditableBy(attribute.getIsEditableBy());
+                                attributeDTO.setCicImpacted(attribute.isCicImpacted());
+                                return attributeDTO;
+                            })
+                            .collect(Collectors.toList())
+                    );
+
+                    return tabDTO;
+                })
+                .collect(Collectors.toList())
+        );
+
+        return response;
+    }
+}
 
