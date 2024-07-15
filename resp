@@ -35,3 +35,74 @@
     }
   ]
 }
+------------
+public class AttributeDTO {
+    private String name;
+    private String maintenanceType;
+    private boolean cicImpacted;
+
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getMaintenanceType() {
+        return maintenanceType;
+    }
+
+    public void setMaintenanceType(String maintenanceType) {
+        this.maintenanceType = maintenanceType;
+    }
+
+    public boolean isCicImpacted() {
+        return cicImpacted;
+    }
+
+    public void setCicImpacted(boolean cicImpacted) {
+        this.cicImpacted = cicImpacted;
+    }
+}
+----------
+import java.util.List;
+
+public class TabDTO {
+    private String name;
+    private List<AttributeDTO> attributes;
+
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<AttributeDTO> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(List<AttributeDTO> attributes) {
+        this.attributes = attributes;
+    }
+}
+
+----------
+import java.util.List;
+
+public class ResponsePayloadDTO {
+    private List<TabDTO> tabs;
+
+    // Getters and setters
+    public List<TabDTO> getTabs() {
+        return tabs;
+    }
+
+    public void setTabs(List<TabDTO> tabs) {
+        this.tabs = tabs;
+    }
+}
