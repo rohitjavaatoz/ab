@@ -1,0 +1,37 @@
+{
+  "tabs": [
+    {
+      "name": "overview",
+        "attributes": [
+          {
+            "name": "itemDescription",
+            "maintenanceType": "WATCHFUL",
+            "cicImpacted": false  
+          },
+          {
+            "name": "itemSize",
+            "maintenanceType": "WATCHFUL",
+            "cicImpacted": true  
+          },
+          {
+            "name": "digitalProductTitle",
+            "maintenanceType": "NON-WATCHFUL"
+          }
+        ]
+    },
+    {
+      "name": "hierarchy",
+      "attributes": [
+       {
+          "name": "description",
+          "maintenanceType": "NON-WATCHFUL"
+       },
+        {
+          "name": "size",
+          "maintenanceType": "WATCHFUL",
+          "cicImpacted": true
+        }
+      ]
+    }
+  ]
+}
