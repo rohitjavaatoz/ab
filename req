@@ -1,0 +1,9 @@
+[II-17092] Tech Story | API to identify attributes in maintenance (Meta data) - GET | BE Only - Safeway Jira
+
+This API will help the UI to determine which all are the fields that need to be shown in editable mode when user click edit core item or edit distribution 
+
+API Endpoint: /item/maintain/metadata
+
+HTTP Method: GET
+
+While giving the response to UI the attributes need to be filtered based on the Auth role, we are receiving in token against isEditableBy attribute in collection
