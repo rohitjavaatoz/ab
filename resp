@@ -62,3 +62,33 @@ public class ResponsePayloadDTO {
     private List<TabDTO> tabs;
 }
 
+-------------------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class MaintainMetadataService {
+
+    @Autowired
+    private MaintainMetadataRepository repository;
+
+    public ResponsePayloadDTO getMetadataForEditableAttributes(String userRole) {
+        MaintainMetadata metadata = repository.findById("metadata_id").orElseThrow(() -> new RuntimeException("Metadata not found"));
+
+        // Filter attributes based on userRole
+        metadata.getTabs().forEach(tab -> {
+            tab.setAttributes(
+                tab.getAttributes().stream()
+                    .filter(attr -> userRole.equals(attr.getIsEditableBy()))
+                    .collect(Collectors.toList())
+            );
+        });
+
+        // Return filtered metadata
+        ResponsePayloadDTO responsePayloadDTO = new ResponsePayloadDTO();
+        responsePayloadDTO.setTabs(metadata.getTabs());
+        return responsePayloadDTO;
+    }
+}
