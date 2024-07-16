@@ -283,3 +283,12 @@ public class MetadataDocument {
         }
     }
 }
+-----
+    List<MetadataDocument> findByTabsAttributesIsEditableBy(String role);
+db.collection.find({
+  "tabs.attributes": {
+    $elemMatch: {
+      isEditableBy: "MDS"
+    }
+  }
+})
