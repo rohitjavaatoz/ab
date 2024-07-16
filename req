@@ -151,4 +151,59 @@ public class MetadataController {
         return filteredMetadata;
     }
 }
+------------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/item/maintain")
+public class MetadataController {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    @GetMapping("/metadata")
+    public MetadataResponseDTO getMetadata() {
+        // Assuming you get the authRole from the token or request context
+        String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
+
+        // Retrieve all metadata documents from MongoDB
+        List<MetadataDocument> allMetadata = metadataRepository.findAll();
+
+        // Initialize DTOs to store the filtered result
+        MetadataResponseDTO responseDTO = new MetadataResponseDTO();
+        List<TabDTO> tabDTOs = new ArrayList<>();
+
+        // Iterate through each MetadataDocument
+        for (MetadataDocument metadata : allMetadata) {
+            TabDTO tabDTO = new TabDTO();
+            tabDTO.setName(metadata.getName());
+
+            List<AttributeDTO> attributeDTOs = new ArrayList<>();
+
+            // Iterate through each Attribute in the current Tab
+            for (MetadataDocument.Attribute attribute : metadata.getAttributes()) {
+                // Check if authRole is "MDS" and attribute is editable by "MDS"
+                if ("MDS".equals(authRole) && "MDS".equals(attribute.getIsEditableBy())) {
+                    AttributeDTO attributeDTO = new AttributeDTO();
+                    attributeDTO.setName(attribute.getName());
+                    attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+                    attributeDTO.setIsEditableBy(attribute.getIsEditableBy());
+                    attributeDTO.setCicImpacted(attribute.isCicImpacted());
+                    attributeDTOs.add(attributeDTO);
+                }
+            }
+
+            tabDTO.setAttributes(attributeDTOs);
+            tabDTOs.add(tabDTO);
+        }
+
+        responseDTO.setTabs(tabDTOs);
+        return responseDTO;
+    }
+}
 
