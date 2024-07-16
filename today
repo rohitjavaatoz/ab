@@ -36,3 +36,53 @@ public class MetadataService {
         return document;
     }
 }
+--------------------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class MetadataService {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    public MetadataResponseDTO findByIsEditableBy(String editableBy) {
+        List<MetadataDocument> allDocuments = metadataRepository.findAll();
+
+        // Map MetadataDocument to MetadataResponseDTO
+        return mapToResponseDTO(allDocuments, editableBy);
+    }
+
+    private MetadataResponseDTO mapToResponseDTO(List<MetadataDocument> documents, String editableBy) {
+        MetadataResponseDTO responseDTO = new MetadataResponseDTO();
+
+        List<TabDTO> tabDTOs = documents.stream()
+                .map(document -> {
+                    TabDTO tabDTO = new TabDTO();
+                    tabDTO.setName(document.getName());
+
+                    List<AttributeDTO> attributeDTOs = document.getTabs().stream()
+                            .flatMap(tab -> tab.getAttributes().stream())
+                            .filter(attr -> attr.getIsEditableBy().contains(editableBy))
+                            .map(this::mapToAttributeDTO)
+                            .collect(Collectors.toList());
+
+                    tabDTO.setAttributes(attributeDTOs);
+                    return tabDTO;
+                })
+                .collect(Collectors.toList());
+
+        responseDTO.setTabs(tabDTOs);
+        return responseDTO;
+    }
+
+    private AttributeDTO mapToAttributeDTO(Attribute attribute) {
+        AttributeDTO attributeDTO = new AttributeDTO();
+        attributeDTO.setName(attribute.getName());
+        attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+        attributeDTO.setCicImpacted(attribute.getCicImpacted());
+        return attributeDTO;
+    }
+}
