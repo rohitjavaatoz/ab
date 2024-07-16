@@ -206,4 +206,43 @@ public class MetadataController {
         return responseDTO;
     }
 }
+--------------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class MetadataService {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    public MetadataResponseDTO getFilteredMetadata(String authRole) {
+        List<MetadataDocument> allMetadata = metadataRepository.findAll();
+        List<TabDTO> tabDTOs = new ArrayList<>();
+
+        for (MetadataDocument metadata : allMetadata) {
+            TabDTO tabDTO = new TabDTO();
+            tabDTO.setName(metadata.getName());
+
+            List<AttributeDTO> attributeDTOs = new ArrayList<>();
+            for (MetadataDocument.Tab.Attribute attribute : metadata.getTabs().getAttributes()) {
+                if (attribute.getIsEditableBy().equals(authRole)) {
+                    AttributeDTO attributeDTO = new AttributeDTO();
+                    attributeDTO.setName(attribute.getName());
+                    attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+                    attributeDTO.setIsEditableBy(attribute.getIsEditableBy());
+                    attributeDTO.setCicImpacted(attribute.isCicImpacted());
+                    attributeDTOs.add(attributeDTO);
+                }
+            }
+
+            tabDTO.setAttributes(attributeDTOs);
+            tabDTOs.add(tabDTO);
+        }
+
+        return new MetadataResponseDTO(tabDTOs);
+    }
+}
 
