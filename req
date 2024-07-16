@@ -101,4 +101,54 @@ public class MetadataController {
         return response;
     }
 }
+--------------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/item/maintain")
+public class MetadataController {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    @GetMapping("/metadata")
+    public MetadataDocument getMetadata() {
+        // Assuming you get the authRole from the token or request context
+        String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
+
+        // Retrieve all metadata documents from MongoDB
+        List<MetadataDocument> allMetadata = metadataRepository.findAll();
+
+        // Initialize a new MetadataDocument to store the filtered result
+        MetadataDocument filteredMetadata = new MetadataDocument();
+        List<MetadataDocument.Tab> filteredTabs = new ArrayList<>();
+
+        // Iterate through each MetadataDocument
+        for (MetadataDocument metadata : allMetadata) {
+            MetadataDocument.Tab filteredTab = new MetadataDocument.Tab();
+            filteredTab.setName(metadata.getName());
+
+            List<MetadataDocument.Attribute> filteredAttributes = new ArrayList<>();
+
+            // Iterate through each Attribute in the current Tab
+            for (MetadataDocument.Attribute attribute : metadata.getAttributes()) {
+                // Check if authRole is in the isEditableBy list
+                if (attribute.getIsEditableBy().contains(authRole)) {
+                    filteredAttributes.add(attribute);
+                }
+            }
+
+            filteredTab.setAttributes(filteredAttributes);
+            filteredTabs.add(filteredTab);
+        }
+
+        filteredMetadata.setTabs(filteredTabs);
+        return filteredMetadata;
+    }
+}
 
