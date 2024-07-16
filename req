@@ -294,3 +294,44 @@ db.collection.find({
 })
 --------------
 @Query("{ 'tabs.attributes.isEditableBy': ?0 }")
+
+
+---------
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class MetadataService {
+
+    @Autowired
+    private MetadataRepository metadataRepository;
+
+    public List<MetadataDocument> findByIsEditableBy(String editableBy) {
+        List<MetadataDocument> allDocuments = metadataRepository.findAll();
+
+        return allDocuments.stream()
+                .map(document -> filterAttributesByEditableBy(document, editableBy))
+                .collect(Collectors.toList());
+    }
+
+    private MetadataDocument filterAttributesByEditableBy(MetadataDocument document, String editableBy) {
+        List<Tab> filteredTabs = document.getTabs().stream()
+                .map(tab -> {
+                    List<Attribute> filteredAttributes = tab.getAttributes().stream()
+                            .filter(attr -> attr.getIsEditableBy().contains(editableBy))
+                            .collect(Collectors.toList());
+
+                    // Update tab with filtered attributes
+                    tab.setAttributes(filteredAttributes);
+                    return tab;
+                })
+                .collect(Collectors.toList());
+
+        // Update document with filtered tabs
+        document.setTabs(filteredTabs);
+        return document;
+    }
+}
+
