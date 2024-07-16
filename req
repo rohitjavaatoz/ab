@@ -246,3 +246,40 @@ public class MetadataService {
     }
 }
 
+----------------
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "metadata")
+public class MetadataDocument {
+
+    @Id
+    private String id;
+
+    private List<Tab> tabs;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Tab {
+        private String name;
+        private List<Attribute> attributes;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Attribute {
+            private String name;
+            private String maintenanceType;
+            private List<String> isEditableBy;
+            private boolean cicImpacted;
+        }
+    }
+}
