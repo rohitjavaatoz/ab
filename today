@@ -86,3 +86,67 @@ public class MetadataService {
         return attributeDTO;
     }
 }
+----------------
+import lombok.Data;
+import java.util.List;
+
+@Data
+public class ResponseDto {
+    private List<TabDto> tabs;
+}
+
+@Data
+public class TabDto {
+    private String name;
+    private List<AttributeDto> attributes;
+}
+
+@Data
+public class AttributeDto {
+    private String name;
+    private String maintenanceType;
+    private Boolean cicImpacted; // Assuming cicImpacted can be null if not specified
+}
+------------------
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class TabService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate; // Autowire your MongoTemplate
+
+    public ResponseDto getFilteredTabs(String editableBy) {
+        // Example logic to fetch from MongoDB using MongoTemplate
+        List<TabEntity> tabs = mongoTemplate.findAll(TabEntity.class);
+
+        // Map and filter as per requirements
+        List<TabDto> tabDtos = tabs.stream()
+            .map(tabEntity -> {
+                TabDto tabDto = new TabDto();
+                tabDto.setName(tabEntity.getName());
+                List<AttributeDto> filteredAttributes = tabEntity.getAttributes().stream()
+                    .filter(attr -> attr.getIsEditableBy().contains(editableBy))
+                    .map(attr -> {
+                        AttributeDto attrDto = new AttributeDto();
+                        attrDto.setName(attr.getName());
+                        attrDto.setMaintenanceType(attr.getMaintenanceType());
+                        attrDto.setCicImpacted(attr.getCicImpacted());
+                        return attrDto;
+                    })
+                    .collect(Collectors.toList());
+                tabDto.setAttributes(filteredAttributes);
+                return tabDto;
+            })
+            .collect(Collectors.toList());
+
+        ResponseDto responseDto = new ResponseDto();
+        responseDto.setTabs(tabDtos);
+        return responseDto;
+    }
+}
