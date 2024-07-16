@@ -292,3 +292,5 @@ db.collection.find({
     }
   }
 })
+--------------
+@Query("{ 'tabs.attributes.isEditableBy': ?0 }")
