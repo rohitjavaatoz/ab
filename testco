@@ -30,3 +30,53 @@ public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocu
 
     }
 }
+----------------------------------
+package com.albertsons.meitem.controller.item.maintenance;
+
+import com.albertsons.meitem.configuration.ResponseHandler;
+import com.albertsons.meitem.response.maintenace.ResponsePayloadDTO;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class MaintenanceMetaDataControllerTest {
+
+    @Mock
+    private MaintenanceMetaServiceImpl maintenanceMetaService;
+
+    @InjectMocks
+    private MaintenanceMetaDataController maintenanceMetaDataController;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetMaintenanceMetadata_Success() {
+        // Mock service response
+        ResponsePayloadDTO mockPayload = new ResponsePayloadDTO();
+        when(maintenanceMetaService.getMaintenanceMeta()).thenReturn(mockPayload);
+
+        // Call controller method
+        ResponseEntity<Object> responseEntity = maintenanceMetaDataController.getMaintenanceMetadata();
+
+        // Verify service method was called once
+        verify(maintenanceMetaService, times(1)).getMaintenanceMeta();
+
+        // Assert response status and body
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(mockPayload, responseEntity.getBody());
+    }
+
+    // Add more test cases as needed to cover different scenarios
+}
+
