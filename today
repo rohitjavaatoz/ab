@@ -150,3 +150,47 @@ public class TabService {
         return responseDto;
     }
 }
+----------
+import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class MappingService {
+
+    public List<EmployeeDTO> mapToDTO(List<Employee> employees) {
+        List<EmployeeDTO> dtos = new ArrayList<>();
+
+        for (Employee employee : employees) {
+            List<TabDTO> tabDTOs = new ArrayList<>();
+
+            for (Tab tab : employee.getTabs()) {
+                List<AttributeDTO> attributeDTOs = new ArrayList<>();
+
+                for (Attribute attribute : tab.getAttributes()) {
+                    AttributeDTO attributeDTO = new AttributeDTO();
+                    attributeDTO.setName(attribute.getName());
+                    attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+                    attributeDTO.setCicImpacted(attribute.getCicImpacted());
+                    // Add other fields if needed
+
+                    attributeDTOs.add(attributeDTO);
+                }
+
+                TabDTO tabDTO = new TabDTO();
+                tabDTO.setName(tab.getName());
+                tabDTO.setAttributes(attributeDTOs);
+
+                tabDTOs.add(tabDTO);
+            }
+
+            EmployeeDTO dto = new EmployeeDTO();
+            dto.setTabs(tabDTOs);
+
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+}
+
