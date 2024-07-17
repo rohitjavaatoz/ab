@@ -240,4 +240,51 @@ public class MappingService {
         return attributeDTO;
     }
 }
+---------------------
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class MappingService {
+
+    public List<EmployeeDTO> mapToDTO(List<Employee> employees) {
+        return employees.stream()
+                .map(employee -> {
+                    EmployeeDTO employeeDTO = new EmployeeDTO();
+                    employeeDTO.setTabs(
+                            employee.getTabs().stream()
+                                    .map(tab -> {
+                                        TabDTO tabDTO = new TabDTO();
+                                        tabDTO.setName(tab.getName());
+                                        tabDTO.setAttributes(
+                                                tab.getAttributes().stream()
+                                                        .map(attribute -> {
+                                                            AttributeDTO attributeDTO = new AttributeDTO();
+                                                            attributeDTO.setName(attribute.getName());
+                                                            attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+                                                            attributeDTO.setCicImpacted(attribute.getCicImpacted());
+                                                            
+                                                            // Handle null values
+                                                            if (attributeDTO.getMaintenanceType() == null) {
+                                                                attributeDTO.setMaintenanceType("DEFAULT"); // Example default value
+                                                            }
+                                                            if (attributeDTO.getCicImpacted() == null) {
+                                                                attributeDTO.setCicImpacted(false); // Example default value
+                                                            }
+                                                            
+                                                            // Add other fields if needed
+                                                            return attributeDTO;
+                                                        })
+                                                        .collect(Collectors.toList())
+                                        );
+                                        return tabDTO;
+                                    })
+                                    .collect(Collectors.toList())
+                    );
+                    return employeeDTO;
+                })
+                .collect(Collectors.toList());
+    }
+}
 
