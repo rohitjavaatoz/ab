@@ -1,0 +1,50 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class TabService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate; // Autowire your MongoDB template or repository
+
+    public TabsResponseDTO getFilteredTabs() {
+        // Assuming you have a method to fetch data from MongoDB
+        List<Tab> tabs = mongoTemplate.findAll(Tab.class); // Replace Tab with your actual MongoDB entity class
+
+        // Map and filter the data to DTO
+        List<TabDTO> tabDTOs = tabs.stream()
+                .map(this::mapTabToDTO)
+                .collect(Collectors.toList());
+
+        TabsResponseDTO responseDTO = new TabsResponseDTO();
+        responseDTO.setTabs(tabDTOs);
+
+        return responseDTO;
+    }
+
+    private TabDTO mapTabToDTO(Tab tab) {
+        TabDTO tabDTO = new TabDTO();
+        tabDTO.setName(tab.getName());
+
+        List<AttributeDTO> attributeDTOs = tab.getAttributes().stream()
+                .map(this::mapAttributeToDTO)
+                .collect(Collectors.toList());
+
+        tabDTO.setAttributes(attributeDTOs);
+
+        return tabDTO;
+    }
+
+    private AttributeDTO mapAttributeToDTO(Attribute attribute) {
+        AttributeDTO attributeDTO = new AttributeDTO();
+        attributeDTO.setName(attribute.getName());
+        attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+        attributeDTO.setCicImpacted(attribute.getCicImpacted()); // Assuming getCicImpacted returns Boolean
+
+        return attributeDTO;
+    }
+}
