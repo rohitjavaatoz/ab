@@ -104,3 +104,12 @@ public class MaintainMetadataService {
                                                             } else {
                                                                 attributeDTO.setCicImpacted(false); // Default value if null
                                                             }
+-----------------------
+{
+    "errors": [
+        {
+            "code": 500,
+            "message": "Cannot invoke \"java.lang.Boolean.booleanValue()\" because the return value of \"com.albertsons.meitem.model.mongo.maintenance.Attribute.getCicImpacted()\" is null"
+        }
+    ]
+}
