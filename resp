@@ -94,3 +94,13 @@ public class MaintainMetadataService {
 }
 ----------
         String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE));
+
+
+---------
+ if (Objects.equals(attribute.getCicImpacted(), Boolean.TRUE)) {
+                                                                attributeDTO.setCicImpacted(true);
+                                                            } else if (Objects.equals(attribute.getCicImpacted(), Boolean.FALSE)) {
+                                                                attributeDTO.setCicImpacted(false);
+                                                            } else {
+                                                                attributeDTO.setCicImpacted(false); // Default value if null
+                                                            }
