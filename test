@@ -1,0 +1,43 @@
+[
+    {
+        "id": "668fcecb6c521594f8689097",
+        "tabs": [
+            {
+                "name": "overview",
+                "attributes": [
+                    {
+                        "name": "itemDescription",
+                        "maintenanceType": "WATCHFUL",
+                        "isEditableBy": [
+                            "VENDOR",
+                            "MDS"
+                        ],
+                        "cicImpacted": false
+                    },
+                    {
+                        "name": "digitalProductTitle",
+                        "maintenanceType": "NON-WATCHFUL",
+                        "isEditableBy": [
+                            "VENDOR"
+                        ],
+                        "cicImpacted": null
+                    }
+                ]
+            },
+            {
+                "name": "hierarchy",
+                "attributes": [
+                    {
+                        "name": "size",
+                        "maintenanceType": "WATCHFUL",
+                        "isEditableBy": [
+                            "VENDOR",
+                            "MDS"
+                        ],
+                        "cicImpacted": true
+                    }
+                ]
+            }
+        ]
+    }
+]
