@@ -1,0 +1,32 @@
+package com.albertsons.meitem.controller.item.maintenance;
+
+import com.albertsons.meitem.configuration.ResponseHandler;
+import com.albertsons.meitem.document.item.maintenance.MaintenanceMetaDataApiDocument;
+import com.albertsons.meitem.response.maintenace.ResponsePayloadDTO;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaServiceImpl;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@Slf4j
+@Tag(name = "metadata APIs", description = "Endpoints for metadata")
+
+public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocument {
+
+    @Autowired
+    MaintenanceMetaServiceImpl maintenanceMetaServiceImpl;
+
+    @Override
+    public ResponseEntity<Object> getMaintenanceMetadata() {
+
+        return ResponseHandler.generateResponse(HttpStatus.OK, maintenanceMetaServiceImpl.getMaintenanceMeta());
+
+    }
+}
