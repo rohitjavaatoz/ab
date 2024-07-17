@@ -113,3 +113,10 @@ public class MaintainMetadataService {
         }
     ]
 }
+------
+ // Handle cicImpacted null value
+                                                            if (attribute.getCicImpacted() != null) {
+                                                                attributeDTO.setCicImpacted(attribute.getCicImpacted());
+                                                            } else {
+                                                                attributeDTO.setCicImpacted(false); // Default value if null
+                                                            }
