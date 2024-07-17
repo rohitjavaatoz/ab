@@ -360,3 +360,124 @@ public class MaintenanceMetaServiceImplTest {
         return tabsCollection;
     }
 }
+-------------
+import com.albertsons.meitem.constants.GlobalConstants;
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.model.mongo.maintenance.Tab;
+import com.albertsons.meitem.model.mongo.maintenance.TabsCollection;
+import com.albertsons.meitem.repository.mongo.MaintainMetadataRepository;
+import com.albertsons.meitem.response.maintenace.ResponsePayloadDTO;
+import com.albertsons.meitem.response.maintenace.TabDTO;
+import com.albertsons.meitem.utils.RequestContextManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class MaintenanceMetaServiceImplTest {
+
+    @Mock
+    private MaintainMetadataRepository maintainMetadataRepository;
+
+    @Mock
+    private RequestContextManager requestContextManager;
+
+    @InjectMocks
+    private MaintenanceMetaServiceImpl maintenanceMetaService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_Success() {
+        String dummyAuthRole = "ADMIN";
+        when(requestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn(dummyAuthRole);
+
+        TabsCollection tabsCollection = createDummyTabsCollection();
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableBy(dummyAuthRole)).thenReturn(Collections.singletonList(tabsCollection));
+
+        ResponsePayloadDTO response = maintenanceMetaService.getMaintenanceMeta();
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableBy(dummyAuthRole);
+
+        assertEquals(2, response.getTabs().size());
+        assertEquals("Tab1", response.getTabs().get(0).getName());
+        assertEquals(1, response.getTabs().get(0).getAttributes().size());
+        assertEquals("Attr1", response.getTabs().get(0).getAttributes().get(0).getName());
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_EmptyResponse() {
+        String dummyAuthRole = "ADMIN";
+        when(requestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn(dummyAuthRole);
+
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableBy(dummyAuthRole)).thenReturn(Collections.emptyList());
+
+        ResponsePayloadDTO response = maintenanceMetaService.getMaintenanceMeta();
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableBy(dummyAuthRole);
+
+        assertNotNull(response);
+        assertTrue(response.getTabs().isEmpty());
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_ExceptionInRepositoryCall() {
+        String dummyAuthRole = "ADMIN";
+        when(requestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn(dummyAuthRole);
+
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableBy(dummyAuthRole)).thenThrow(RuntimeException.class);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.getMaintenanceMeta());
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableBy(dummyAuthRole);
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_Success() {
+        TabsCollection tabsCollection = createDummyTabsCollection();
+
+        TabsCollection filteredTabsCollection = maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, "ADMIN");
+
+        assertEquals(2, filteredTabsCollection.getTabs().size());
+        assertEquals(1, filteredTabsCollection.getTabs().get(0).getAttributes().size());
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_EmptyAttributes() {
+        TabsCollection tabsCollection = new TabsCollection();
+        tabsCollection.setTabs(Collections.singletonList(new Tab("Tab1", Collections.emptyList())));
+
+        TabsCollection filteredTabsCollection = maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, "ADMIN");
+
+        assertTrue(filteredTabsCollection.getTabs().isEmpty());
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_ExceptionInFiltering() {
+        TabsCollection tabsCollection = createDummyTabsCollection();
+        tabsCollection.getTabs().get(0).getAttributes().get(0).setIsEditableBy(null);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, "ADMIN"));
+    }
+
+    private TabsCollection createDummyTabsCollection() {
+        TabsCollection tabsCollection = new TabsCollection();
+        tabsCollection.setTabs(Arrays.asList(
+                new Tab("Tab1", Arrays.asList(new Attribute("Attr1", "Type1", Arrays.asList("ADMIN")))),
+                new Tab("Tab2", Arrays.asList(new Attribute("Attr2", "Type2", Arrays.asList("ADMIN"))))
+        ));
+        return tabsCollection;
+    }
+}
