@@ -193,4 +193,51 @@ public class MappingService {
         return dtos;
     }
 }
+-----------------
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class MappingService {
+
+    public List<EmployeeDTO> mapToDTO(List<Employee> employees) {
+        return employees.stream()
+                .map(this::mapEmployeeToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private EmployeeDTO mapEmployeeToDTO(Employee employee) {
+        List<TabDTO> tabDTOs = employee.getTabs().stream()
+                .map(this::mapTabToDTO)
+                .collect(Collectors.toList());
+
+        EmployeeDTO employeeDTO = new EmployeeDTO();
+        employeeDTO.setTabs(tabDTOs);
+
+        return employeeDTO;
+    }
+
+    private TabDTO mapTabToDTO(Tab tab) {
+        List<AttributeDTO> attributeDTOs = tab.getAttributes().stream()
+                .map(this::mapAttributeToDTO)
+                .collect(Collectors.toList());
+
+        TabDTO tabDTO = new TabDTO();
+        tabDTO.setName(tab.getName());
+        tabDTO.setAttributes(attributeDTOs);
+
+        return tabDTO;
+    }
+
+    private AttributeDTO mapAttributeToDTO(Attribute attribute) {
+        AttributeDTO attributeDTO = new AttributeDTO();
+        attributeDTO.setName(attribute.getName());
+        attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+        attributeDTO.setCicImpacted(attribute.getCicImpacted());
+        // Add other fields if needed
+
+        return attributeDTO;
+    }
+}
 
