@@ -156,3 +156,86 @@ public class MaintenanceMetaServiceImpl implements MaintenanceMetaService {
       }
     }
 }
+-------
+import com.albertsons.meitem.constants.GlobalConstants;
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.model.mongo.maintenance.Tab;
+import com.albertsons.meitem.model.mongo.maintenance.TabsCollection;
+import com.albertsons.meitem.repository.mongo.MaintainMetadataRepository;
+import com.albertsons.meitem.response.maintenace.AttributeDTO;
+import com.albertsons.meitem.response.maintenace.ResponsePayloadDTO;
+import com.albertsons.meitem.response.maintenace.TabDTO;
+import com.albertsons.meitem.utils.RequestContextManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class MaintenanceMetaServiceImplTest {
+
+    @Mock
+    private MaintainMetadataRepository maintainMetadataRepository;
+
+    @Mock
+    private RequestContextManager requestContextManager;
+
+    @InjectMocks
+    private MaintenanceMetaServiceImpl maintenanceMetaService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_Success() {
+        // Mock RequestContextManager to return a dummy auth role
+        String dummyAuthRole = "ADMIN";
+        when(requestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn(dummyAuthRole);
+
+        // Mock repository response
+        TabsCollection tabsCollection = new TabsCollection();
+        tabsCollection.setTabs(Arrays.asList(
+                new Tab("Tab1", Arrays.asList(new Attribute("Attr1", "Type1", Arrays.asList("ADMIN")))),
+                new Tab("Tab2", Arrays.asList(new Attribute("Attr2", "Type2", Arrays.asList("ADMIN"))))
+        ));
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableBy(dummyAuthRole)).thenReturn(Arrays.asList(tabsCollection));
+
+        // Call service method
+        ResponsePayloadDTO response = maintenanceMetaService.getMaintenanceMeta();
+
+        // Verify repository method was called once
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableBy(dummyAuthRole);
+
+        // Assert response content
+        assertEquals(2, response.getTabs().size()); // Assuming two tabs were returned
+        assertEquals("Tab1", response.getTabs().get(0).getName());
+        assertEquals(1, response.getTabs().get(0).getAttributes().size()); // Assuming one attribute in Tab1
+        assertEquals("Attr1", response.getTabs().get(0).getAttributes().get(0).getName());
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_Success() {
+        // Create dummy TabsCollection with attributes
+        TabsCollection tabsCollection = new TabsCollection();
+        tabsCollection.setTabs(Arrays.asList(
+                new Tab("Tab1", Arrays.asList(new Attribute("Attr1", "Type1", Arrays.asList("ADMIN", "MANAGER")))),
+                new Tab("Tab2", Arrays.asList(new Attribute("Attr2", "Type2", Arrays.asList("ADMIN"))))
+        ));
+
+        // Call service method
+        TabsCollection filteredTabsCollection = maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, "ADMIN");
+
+        // Assert filtering result
+        assertEquals(2, filteredTabsCollection.getTabs().size()); // Both tabs should be retained for "ADMIN"
+        assertEquals(1, filteredTabsCollection.getTabs().get(0).getAttributes().size()); // One attribute in Tab1 for "ADMIN"
+    }
+}
