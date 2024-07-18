@@ -1,0 +1,111 @@
+package com.albertsons.meitem.controller.item.maintenance;
+
+import com.albertsons.meitem.configuration.ResponseHandler;
+import com.albertsons.meitem.document.item.maintenance.MaintenanceMetaDataApiDocument;
+import com.albertsons.meitem.features.ItemFeatures;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.togglz.core.manager.FeatureManager;
+
+
+@RestController
+@Slf4j
+@Tag(name = "metadata APIs", description = "Endpoints for metadata")
+
+public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocument {
+
+    @Autowired
+    MaintenanceMetaDataServiceImpl maintenanceMetaServiceImpl;
+    @Autowired
+    FeatureManager featureManager;
+    @Override
+    public ResponseEntity<Object> getMaintenanceMetadata() {
+        if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+            return ResponseHandler.generateResponse(HttpStatus.OK, maintenanceMetaServiceImpl.getMaintenanceMeta());
+        }
+            return ResponseEntity.badRequest().build();
+    }
+}
+------
+import com.albertsons.meitem.configuration.ResponseHandler;
+import com.albertsons.meitem.document.item.maintenance.MaintenanceMetaDataApiDocument;
+import com.albertsons.meitem.features.ItemFeatures;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.togglz.core.manager.FeatureManager;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class MaintenanceMetaDataControllerTests {
+
+    @InjectMocks
+    private MaintenanceMetaDataController controller;
+
+    @Mock
+    private MaintenanceMetaDataServiceImpl maintenanceMetaServiceImpl;
+
+    @Mock
+    private FeatureManager featureManager;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetMaintenanceMetadata_ActiveFeature_Returns200() {
+        // Arrange
+        when(featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)).thenReturn(true);
+        when(maintenanceMetaServiceImpl.getMaintenanceMeta()).thenReturn(someMockedMetadata());
+
+        // Act
+        ResponseEntity<Object> response = controller.getMaintenanceMetadata();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add more assertions if necessary for response body content
+    }
+
+    @Test
+    public void testGetMaintenanceMetadata_InactiveFeature_Returns400() {
+        // Arrange
+        when(featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)).thenReturn(false);
+
+        // Act
+        ResponseEntity<Object> response = controller.getMaintenanceMetadata();
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetMaintenanceMetadata_FeatureManagerNull_Returns400() {
+        // Arrange
+        when(controller.getFeatureManager()).thenReturn(null);
+
+        // Act
+        ResponseEntity<Object> response = controller.getMaintenanceMetadata();
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    // Add more test cases for edge cases, logging, exceptions, etc.
+
+    private Object someMockedMetadata() {
+        // Implement this method to return a mocked maintenance metadata object
+        return null; // Replace with actual mock data
+    }
+}
