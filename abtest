@@ -64,3 +64,76 @@ public class MaintenanceMetaServiceImpl implements MaintenanceMetaService {
         return attributeDTO;
     }
 }
+---------------------------
+package com.albertsons.meitem.service.itemv2;
+
+import com.albertsons.meitem.constants.GlobalConstants;
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.model.mongo.maintenance.Tab;
+import com.albertsons.meitem.model.mongo.maintenance.TabsCollection;
+import com.albertsons.meitem.repository.mongo.MaintainMetadataRepository;
+import com.albertsons.meitem.response.maintenace.AttributeDTO;
+import com.albertsons.meitem.response.maintenace.ResponsePayloadDTO;
+import com.albertsons.meitem.response.maintenace.TabDTO;
+import com.albertsons.meitem.utils.RequestContextManager;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+public class MaintenanceMetaServiceImpl implements MaintenanceMetaService {
+
+    @Autowired
+    MaintainMetadataRepository maintainMetadataRepository;
+
+    @Override
+    public ResponsePayloadDTO getMaintenanceMeta() {
+        try {
+            String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE)).toUpperCase();
+            List<TabsCollection> allMetadata = maintainMetadataRepository.findByTabsAttributesIsEditableBy(authRole);
+
+            List<TabDTO> tabDTOs = allMetadata.stream()
+                    .flatMap(employee -> employee.getTabs().stream()
+                            .map(tab -> mapTabDTO(tab, authRole)))
+                    .collect(Collectors.toList());
+
+            ResponsePayloadDTO responsePayloadDTO = new ResponsePayloadDTO();
+            responsePayloadDTO.setTabs(tabDTOs);
+
+            return responsePayloadDTO;
+        } catch (Exception e) {
+            log.error("Exception while fetching metadata: {}", e.getMessage());
+            throw new RuntimeException("Exception while fetching the data", e);
+        }
+    }
+
+    private TabDTO mapTabDTO(Tab tab, String authRole) {
+        Objects.requireNonNull(tab, "Tab must not be null");
+
+        TabDTO tabDTO = new TabDTO();
+        tabDTO.setName(tab.getName());
+
+        List<AttributeDTO> attributeDTOs = tab.getAttributes().stream()
+                .filter(attribute -> attribute.getIsEditableBy() != null && attribute.getIsEditableBy().contains(authRole))
+                .map(this::mapAttributeDTO)
+                .collect(Collectors.toList());
+
+        tabDTO.setAttributes(attributeDTOs);
+        return tabDTO;
+    }
+
+    private AttributeDTO mapAttributeDTO(Attribute attribute) {
+        Objects.requireNonNull(attribute, "Attribute must not be null");
+
+        AttributeDTO attributeDTO = new AttributeDTO();
+        attributeDTO.setName(attribute.getName());
+        attributeDTO.setMaintenanceType(attribute.getMaintenanceType());
+        attributeDTO.setCicImpacted(attribute.getCicImpacted() != null ? attribute.getCicImpacted() : false);
+        return attributeDTO;
+    }
+}
