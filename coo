@@ -104,3 +104,111 @@ public class MaintenaceMetaServiceImplTest {
         return atr;
     }
 }
+--------
+import com.albertsons.meitem.constants.GlobalConstants;
+import com.albertsons.meitem.features.ItemFeatures;
+import com.albertsons.meitem.interceptor.LoggingInterceptor;
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.model.mongo.maintenance.Tab;
+import com.albertsons.meitem.model.mongo.maintenance.TabModel;
+import com.albertsons.meitem.repository.mongo.MaintainMetadataRepository;
+import com.albertsons.meitem.response.maintenace.MaintenanceMetaDataResponse;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import com.albertsons.meitem.utils.RequestContextManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.togglz.core.manager.FeatureManager;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class MaintenaceMetaServiceImplTest {
+
+    @Mock
+    private MaintainMetadataRepository maintainMetadataRepository;
+
+    @Mock
+    private RequestContextManager requestContextManager;
+
+    @InjectMocks
+    private MaintenanceMetaDataServiceImpl maintenanceMetaService;
+
+    private LoggingInterceptor loggingInterceptorMock;
+
+    @Mock
+    private FeatureManager featureManager;
+
+    @BeforeEach
+    void setup() {
+        loggingInterceptorMock = mock(LoggingInterceptor.class);
+        RequestContextManager.loggingInterceptor = loggingInterceptorMock;
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_Success() {
+        when(featureManager.isActive(ArgumentMatchers.any(ItemFeatures.class))).thenReturn(true);
+        when(RequestContextManager.getValue(anyString())).thenReturn(Mockito.anyString());
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(anyString())).thenReturn(Collections.singletonList(tabsCollection()));
+
+        MaintenanceMetaDataResponse response = maintenanceMetaService.getMaintenanceMeta();
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableByContaining(anyString());
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_ExceptionInRepositoryCall() {
+        when(featureManager.isActive(ArgumentMatchers.any(ItemFeatures.class))).thenReturn(true);
+        when(RequestContextManager.getValue(anyString())).thenReturn(Mockito.anyString());
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(anyString())).thenThrow(RuntimeException.class);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.getMaintenanceMeta());
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableByContaining(anyString());
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_ExceptionInFiltering() {
+        TabModel tabsCollection = tabsCollection();
+        tabsCollection.getTabs().get(0).getAttributes().get(0).setIsEditableBy(null);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, Mockito.anyString()));
+    }
+
+    private TabModel tabsCollection() {
+        TabModel tabsCollection = new TabModel();
+        tabsCollection.setId("1");
+        List<Tab> tab = new ArrayList<>();
+        tab.add(tab());
+        tabsCollection.setTabs(tab);
+
+        return tabsCollection;
+    }
+
+    private Tab tab() {
+        Tab tab = new Tab();
+        tab.setName("test");
+        List<Attribute> attr = new ArrayList<>();
+        attr.add(attributes());
+        tab.setAttributes(attr);
+        return tab;
+    }
+
+    private Attribute attributes() {
+        Attribute atr = new Attribute();
+        atr.setCicImpacted(true);
+        atr.setIsEditableBy(Arrays.asList(Mockito.anyString(), Mockito.anyString()));
+        atr.setName("test");
+        return atr;
+    }
+}
