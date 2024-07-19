@@ -575,4 +575,96 @@ For more info see javadoc for Matchers class.
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 
+--------------
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.repository.itemv2.MaintenanceMetaRepository;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataService;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class MaintenaceMetaServiceImplTest {
+
+    @Mock
+    private MaintenanceMetaRepository repositoryMock;
+
+    @InjectMocks
+    private MaintenanceMetaDataService metaDataService = new MaintenanceMetaDataServiceImpl();
+
+    private MaintenanceMetaService metaService;
+
+    @BeforeEach
+    public void setUp() {
+        metaService = new MaintenanceMetaServiceImpl(repositoryMock);
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_Success() {
+        // Arrange
+        List<Attribute> attributes = Arrays.asList(
+                new Attribute("attr1", Arrays.asList("role1")),
+                new Attribute("attr2", Arrays.asList("role2"))
+        );
+        when(repositoryMock.getMaintenanceMeta(anyString())).thenReturn(attributes);
+
+        // Act
+        List<Attribute> result = metaService.getMaintenanceMeta("123");
+
+        // Assert
+        verify(repositoryMock, times(1)).getMaintenanceMeta(anyString());
+        assert result != null;
+        assert result.size() == 2;
+    }
+
+    @Test
+    public void testGetMaintenanceMeta_ExceptionInRepositoryCall() {
+        // Arrange
+        when(repositoryMock.getMaintenanceMeta(anyString())).thenThrow(new RuntimeException("Repository exception"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> metaService.getMaintenanceMeta("123"));
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_Success() {
+        // Arrange
+        List<Attribute> attributes = Arrays.asList(
+                new Attribute("attr1", Arrays.asList("role1")),
+                new Attribute("attr2", null) // Simulate a case where isEditableBy is null
+        );
+
+        // Act
+        List<Attribute> filteredAttributes = metaDataService.filterAttributesByEditableBy(attributes, "role1");
+
+        // Assert
+        assert filteredAttributes != null;
+        assert filteredAttributes.size() == 1;
+        assert filteredAttributes.get(0).getName().equals("attr1");
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_ExceptionInFiltering() {
+        // Arrange
+        List<Attribute> attributes = Arrays.asList(
+                new Attribute("attr1", Arrays.asList("role1")),
+                new Attribute("attr2", null) // Simulate a case where isEditableBy is null
+        );
+
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> metaDataService.filterAttributesByEditableBy(attributes, "role2"));
+    }
+}
 
