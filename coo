@@ -1,0 +1,18 @@
+package com.albertsons.meitem.controller.item.maintenance;
+import com.albertsons.meitem.configuration.ResponseHandler;
+import com.albertsons.meitem.document.item.maintenance.MaintenanceMetaDataApiDocument;
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocument {
+    private final MaintenanceMetaDataServiceImpl maintenanceMetaServiceImpl;
+    @Override
+    public ResponseEntity<Object> getMaintenanceMetadata() {
+        return ResponseHandler.generateResponse(HttpStatus.OK, maintenanceMetaServiceImpl.getMaintenanceMeta());
+    }
+}
