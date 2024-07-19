@@ -16,3 +16,47 @@ public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocu
         return ResponseHandler.generateResponse(HttpStatus.OK, maintenanceMetaServiceImpl.getMaintenanceMeta());
     }
 }
+--------------
+import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+public class MaintenanceMetaDataControllerTest {
+
+    @Mock
+    private MaintenanceMetaDataServiceImpl mockMaintenanceMetaServiceImpl;
+
+    @InjectMocks
+    private MaintenanceMetaDataController controller;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetMaintenanceMetadata_Success() {
+        // Mock service response
+        String expectedResponse = "mocked metadata";
+        when(mockMaintenanceMetaServiceImpl.getMaintenanceMeta()).thenReturn(expectedResponse);
+
+        // Call controller method
+        ResponseEntity<Object> responseEntity = controller.getMaintenanceMetadata();
+
+        // Verify response status
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        // Verify response body
+        assertEquals(expectedResponse, responseEntity.getBody());
+    }
+
+    // Add more test cases as needed (e.g., test error scenarios, etc.)
+}
