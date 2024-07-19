@@ -1,62 +1,106 @@
-package com.albertsons.meitem.controller.item.maintenance;
-import com.albertsons.meitem.configuration.ResponseHandler;
-import com.albertsons.meitem.document.item.maintenance.MaintenanceMetaDataApiDocument;
-import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
+package com.albertsons.meitem.service.itemv2;
 
-@RestController
-@RequiredArgsConstructor
-public class MaintenanceMetaDataController implements MaintenanceMetaDataApiDocument {
-    private final MaintenanceMetaDataServiceImpl maintenanceMetaServiceImpl;
-    @Override
-    public ResponseEntity<Object> getMaintenanceMetadata() {
-        return ResponseHandler.generateResponse(HttpStatus.OK, maintenanceMetaServiceImpl.getMaintenanceMeta());
-    }
-}
---------------
-import com.albertsons.meitem.service.itemv2.MaintenanceMetaDataServiceImpl;
+import com.albertsons.meitem.constants.GlobalConstants;
+import com.albertsons.meitem.features.ItemFeatures;
+import com.albertsons.meitem.interceptor.LoggingInterceptor;
+import com.albertsons.meitem.model.mongo.maintenance.Attribute;
+import com.albertsons.meitem.model.mongo.maintenance.Tab;
+import com.albertsons.meitem.model.mongo.maintenance.TabModel;
+import com.albertsons.meitem.repository.mongo.MaintainMetadataRepository;
+import com.albertsons.meitem.response.maintenace.MaintenanceMetaDataResponse;
+import com.albertsons.meitem.utils.RequestContextManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-public class MaintenanceMetaDataControllerTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import org.togglz.core.manager.FeatureManager;
+@ExtendWith(MockitoExtension.class)
+public class MaintenaceMetaServiceImplTest {
+    @Mock
+    private MaintainMetadataRepository maintainMetadataRepository;
+
 
     @Mock
-    private MaintenanceMetaDataServiceImpl mockMaintenanceMetaServiceImpl;
-
+    private RequestContextManager requestContextManager;
     @InjectMocks
-    private MaintenanceMetaDataController controller;
+    private MaintenanceMetaDataServiceImpl maintenanceMetaService;
+    private LoggingInterceptor loggingInterceptorMock;
+
+    @Mock
+    private FeatureManager featureManager;
 
     @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
+    void setup() {
+        loggingInterceptorMock = mock(LoggingInterceptor.class);
+        RequestContextManager.loggingInterceptor = loggingInterceptorMock;
     }
 
     @Test
-    public void testGetMaintenanceMetadata_Success() {
-        // Mock service response
-        String expectedResponse = "mocked metadata";
-        when(mockMaintenanceMetaServiceImpl.getMaintenanceMeta()).thenReturn(expectedResponse);
-
-        // Call controller method
-        ResponseEntity<Object> responseEntity = controller.getMaintenanceMetadata();
-
-        // Verify response status
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        
-        // Verify response body
-        assertEquals(expectedResponse, responseEntity.getBody());
+    public void testGetMaintenanceMeta_Success() {
+        when(featureManager.isActive(ArgumentMatchers.any(ItemFeatures.class))).thenReturn(true);
+        when(RequestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn("VENDOR");
+        TabModel tabsCollection = tabsCollection();
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableByContaining("VENDOR")).thenReturn(Collections.singletonList(tabsCollection));
+        MaintenanceMetaDataResponse response = maintenanceMetaService.getMaintenanceMeta();
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableByContaining("VENDOR");
     }
 
-    // Add more test cases as needed (e.g., test error scenarios, etc.)
+    @Test
+    public void testGetMaintenanceMeta_ExceptionqInRepositoryCall() {
+        when(featureManager.isActive(ArgumentMatchers.any(ItemFeatures.class))).thenReturn(true);
+
+        when(RequestContextManager.getValue(GlobalConstants.AUTHROLE)).thenReturn("ADMIN");
+
+        when(maintainMetadataRepository.findByTabsAttributesIsEditableByContaining("ADMIN")).thenThrow(RuntimeException.class);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.getMaintenanceMeta());
+
+        verify(maintainMetadataRepository, times(1)).findByTabsAttributesIsEditableByContaining("ADMIN");
+    }
+
+    @Test
+    public void testFilterAttributesByEditableBy_ExqceptionInFiltering() {
+        TabModel tabsCollection = tabsCollection();
+        tabsCollection.getTabs().get(0).getAttributes().get(0).setIsEditableBy(null);
+
+        assertThrows(RuntimeException.class, () -> maintenanceMetaService.filterAttributesByEditableBy(tabsCollection, "VENDOR"));
+    }
+
+    public TabModel tabsCollection() {
+        TabModel tabsCollection = new TabModel();
+        tabsCollection.setId("1");
+        List<Tab> tab = new ArrayList<>();
+        tab.add(tab());
+        tabsCollection.setTabs(tab);
+
+        return tabsCollection;
+    }
+
+    public Tab tab() {
+        Tab tab = new Tab();
+        tab.setName("test");
+        List<Attribute> attr = new ArrayList<>();
+        attr.add(attributes());
+        tab.setAttributes(attr);
+        return tab;
+    }
+
+    public Attribute attributes() {
+        Attribute atr = new Attribute();
+        atr.setCicImpacted(true);
+        atr.setIsEditableBy(Arrays.asList("VENDOR", "VENDOR"));
+        atr.setName("test");
+        return atr;
+    }
 }
