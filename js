@@ -152,4 +152,14 @@ public class TabsCollection {
                     .collect(Collectors.toList()))
             .build();
 }
+--------
+    private TabResponse mapTabDTO(Tab tab, String authRole) {
+    return TabResponse.builder()
+            .name(tab.getName())
+            .attributes(tab.getAttributes().stream()
+                    .filter(attribute -> attribute.getIsEditableBy().contains(authRole))
+                    .map(this::mapAttributeDTO)
+                    .collect(Collectors.toList()))
+            .build();
+}
 
