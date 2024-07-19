@@ -93,3 +93,20 @@ public class MaintenanceMetaDataServiceImpl implements MaintenanceMetaDataServic
         }
     }
 }
+-------------------------
+private TabResponse mapTabDto(Tab tab, String authRole) {
+    List<AttributeResponse> attributeDTOs = tab.getAttributes().stream()
+            .filter(attribute -> attribute.getIsEditableBy().contains(authRole))
+            .map(attribute -> AttributeResponse.builder()
+                    .name(attribute.getName())
+                    .maintenanceType(attribute.getMaintenanceType())
+                    .cicImpacted(attribute.getCicImpacted() != null ? attribute.getCicImpacted() : false)
+                    .build())
+            .collect(Collectors.toList());
+
+    return TabResponse.builder()
+            .name(tab.getName())
+            .attributes(attributeDTOs)
+            .build();
+}
+
