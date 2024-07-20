@@ -215,3 +215,27 @@ public MaintenanceMetaDataResponse getMaintenanceMeta() {
         throw new RuntimeException(exception);
     }
 }
+----------
+@Override
+public MaintenanceMetaDataResponse getMaintenanceMeta() {
+    try {
+        if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+            String authRole = Optional.ofNullable(RequestContextManager.getValue(GlobalConstants.AUTHROLE))
+                    .map(String::valueOf)
+                    .orElseThrow(() -> new IllegalStateException("Authentication role is null."));
+            
+            authRole = authRole.toUpperCase(); // Convert to uppercase
+            
+            List<TabModel> mentenanceMetaData = maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(authRole);
+            List<TabResponse> tabResponse = processTabs(mentenanceMetaData, authRole);
+            
+            return MaintenanceMetaDataResponse.builder()
+                    .tabs(tabResponse)
+                    .build();
+        }
+        return new MaintenanceMetaDataResponse();
+    } catch (Exception exception) {
+        log.error("Failed to fetch Maintenance Info: ", exception);
+        throw new RuntimeException(exception);
+    }
+}
