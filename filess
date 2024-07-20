@@ -189,3 +189,29 @@ private TabResponse getTabResponse(Tab tab, String authRole) {
             .attributes(attributeResponses)
             .build();
 }
+----------
+@Override
+public MaintenanceMetaDataResponse getMaintenanceMeta() {
+    try {
+        if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+            Object authRoleObject = RequestContextManager.getValue(GlobalConstants.AUTHROLE);
+            if (authRoleObject == null) {
+                throw new IllegalStateException("Authentication role is null.");
+            }
+            String authRole = String.valueOf(authRoleObject).toUpperCase();
+            if (authRole.isEmpty()) {
+                throw new IllegalStateException("Authentication role is empty.");
+            }
+            
+            List<TabModel> mentenanceMetaData = maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(authRole);
+            List<TabResponse> tabResponse = processTabs(mentenanceMetaData, authRole);
+            return MaintenanceMetaDataResponse.builder()
+                    .tabs(tabResponse)
+                    .build();
+        }
+        return new MaintenanceMetaDataResponse();
+    } catch (Exception exception) {
+        log.error("Failed to fetch Maintenance Info: ", exception);
+        throw new RuntimeException(exception);
+    }
+}
