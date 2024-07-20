@@ -406,4 +406,20 @@ private TabResponse getTabResponse(Tab tab, String authRole) {
             .attributes(attributeResponses)
             .build();
 }
+-----------
+public TabModel filterAttributesByEditableBy(TabModel tabsCollection, String editableBy) {
+    List<Tab> filteredTabs = tabsCollection.getTabs().stream()
+            .map(tab -> {
+                List<Attribute> filteredAttributes = tab.getAttributes().stream()
+                        .filter(attr -> attr.getIsEditableBy().contains(editableBy))
+                        .collect(Collectors.toList());
+                tab.setAttributes(filteredAttributes);
+                return tab;
+            })
+            .filter(tab -> !tab.getAttributes().isEmpty())
+            .collect(Collectors.toList());
+    
+    tabsCollection.setTabs(filteredTabs);
+    return tabsCollection;
+}
 
