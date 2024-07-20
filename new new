@@ -1,0 +1,22 @@
+ @Override
+    public MaintenanceMetaDataResponse getMaintenanceMeta() {
+        try {
+            if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+                String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE)).toUpperCase();
+                List<TabResponse> tabResponse=new ArrayList<>();
+                List<TabModel> MentenanceMetaData = maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(authRole);
+                MentenanceMetaData.stream().map(tabsCollection -> filterAttributesByEditableBy(tabsCollection, authRole)).collect(Collectors.toList());
+                 tabResponse = MentenanceMetaData.stream()
+                        .flatMap(metaData -> metaData.getTabs().stream()
+                                .map(tab -> TabResponse(tab, authRole)))
+                        .collect(Collectors.toList());
+                return MaintenanceMetaDataResponse.builder()
+                        .tabs(tabResponse)
+                        .build();
+            }
+            return new MaintenanceMetaDataResponse();
+        } catch (Exception exception) {
+            log.error("Failed to fetch Maintenance Info: ", exception);
+            throw new RuntimeException(exception);
+        }
+    }
