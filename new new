@@ -20,3 +20,34 @@
             throw new RuntimeException(exception);
         }
     }
+------
+@Override
+public MaintenanceMetaDataResponse getMaintenanceMeta() {
+    try {
+        if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+            String authRole = String.valueOf(RequestContextManager.getValue(GlobalConstants.AUTHROLE)).toUpperCase();
+            List<TabModel> MentenanceMetaData = maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(authRole);
+            
+            // Extracted method call
+            List<TabResponse> tabResponse = processTabs(MentenanceMetaData, authRole);
+
+            return MaintenanceMetaDataResponse.builder()
+                    .tabs(tabResponse)
+                    .build();
+        }
+        return new MaintenanceMetaDataResponse();
+    } catch (Exception exception) {
+        log.error("Failed to fetch Maintenance Info: ", exception);
+        throw new RuntimeException(exception);
+    }
+}
+
+// Extracted method for processing tabs
+private List<TabResponse> processTabs(List<TabModel> MentenanceMetaData, String authRole) {
+    List<TabResponse> tabResponse = MentenanceMetaData.stream()
+            .flatMap(metaData -> metaData.getTabs().stream()
+                    .map(tab -> TabResponse(tab, authRole)))
+            .collect(Collectors.toList());
+    return tabResponse;
+}
+
