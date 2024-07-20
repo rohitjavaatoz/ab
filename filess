@@ -87,3 +87,63 @@ public class MaintenanceMetaDataServiceImpl implements MaintenanceMetaDataServic
         }
     }
 }
+----------------
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Override
+public MaintenanceMetaDataResponse getMaintenanceMeta() {
+    try {
+        if (featureManager.isActive(ItemFeatures.ITEM_MAINTENANCE)) {
+            Optional<String> authRoleOptional = Optional.ofNullable(RequestContextManager.getValue(GlobalConstants.AUTHROLE))
+                    .filter(role -> role instanceof String)
+                    .map(role -> ((String) role).trim().toUpperCase());
+
+            if (authRoleOptional.isPresent() && !authRoleOptional.get().isEmpty()) {
+                String authRole = authRoleOptional.get();
+                
+                List<TabModel> maintenanceMetaData = maintainMetadataRepository.findByTabsAttributesIsEditableByContaining(authRole);
+                List<TabResponse> tabResponse = processTabs(maintenanceMetaData, authRole);
+                
+                return MaintenanceMetaDataResponse.builder()
+                        .tabs(tabResponse)
+                        .build();
+            } else {
+                throw new IllegalArgumentException("Authorization role is missing or invalid.");
+            }
+        }
+        return new MaintenanceMetaDataResponse();
+    } catch (Exception exception) {
+        log.error("Failed to fetch Maintenance Info: ", exception);
+        throw new RuntimeException(exception);
+    }
+}
+---------
+import java.util.Optional;
+
+private TabResponse getTabResponse(Tab tab, String authRole) {
+    // Use Optional to safely handle null attributes
+    Optional<List<Attribute>> optionalAttributes = Optional.ofNullable(tab.getAttributes());
+
+    // Check if attributes are present and not empty
+    if (optionalAttributes.isPresent() && !optionalAttributes.get().isEmpty()) {
+        return TabResponse.builder()
+                .name(tab.getName())
+                .attributes(optionalAttributes.get().stream()
+                        .filter(attribute -> attribute.getIsEditableBy().contains(authRole))
+                        .map(attribute -> AttributeResponse.builder()
+                                .name(attribute.getName())
+                                .maintenanceType(attribute.getMaintenanceType())
+                                .cicImpacted(attribute.getCicImpacted() != null && attribute.getCicImpacted())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
+    } else {
+        // Handle case where attributes are null or empty
+        return TabResponse.builder()
+                .name(tab.getName())
+                .attributes(Collections.emptyList()) // or handle differently based on your requirements
+                .build();
+    }
+}
