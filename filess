@@ -362,3 +362,24 @@ public class MaintenanceMetaDataServiceImpl implements MaintenanceMetaDataServic
 }
 
 
+-----------------
+private TabResponse getTabResponse(Tab tab, String authRole) {
+    List<AttributeResponse> attributeResponses = Optional.ofNullable(tab.getAttributes())
+            .orElse(Collections.emptyList())
+            .stream()
+            .filter(attribute -> {
+                List<String> isEditableBy = attribute.getIsEditableBy();
+                return isEditableBy != null && !isEditableBy.isEmpty() && isEditableBy.contains(authRole);
+            })
+            .map(attribute -> AttributeResponse.builder()
+                    .name(attribute.getName())
+                    .maintenanceType(attribute.getMaintenanceType())
+                    .cicImpacted(Boolean.TRUE.equals(attribute.getCicImpacted()))
+                    .build())
+            .collect(Collectors.toList());
+
+    return TabResponse.builder()
+            .name(tab.getName())
+            .attributes(attributeResponses)
+            .build();
+}
