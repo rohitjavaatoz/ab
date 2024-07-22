@@ -1,1 +1,24 @@
+  private TabResponse getTabResponse(Tab tab, String authRole) {
+        if (tab == null) {
+            return TabResponse.builder()
+                    .name("")
+                    .attributes(Collections.emptyList())
+                    .build();
+        }
 
+        List<AttributeResponse> attributeResponses = Optional.ofNullable(tab.getAttributes())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(attribute -> attribute.getIsEditableBy() != null && !attribute.getIsEditableBy().isEmpty() && attribute.getIsEditableBy().contains(authRole))
+                .map(attribute -> AttributeResponse.builder()
+                        .name(attribute.getName())
+                        .maintenanceType(attribute.getMaintenanceType())
+                        .cicImpacted(Boolean.TRUE.equals(attribute.getCicImpacted()))
+                        .build())
+                .toList();
+
+        return TabResponse.builder()
+                .name(tab.getName())
+                .attributes(attributeResponses)
+                .build();
+    }
